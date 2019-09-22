@@ -1,0 +1,178 @@
+       ID DIVISION.                                                     00010000
+       PROGRAM-ID. REPRT2.                                              00020000
+       ENVIRONMENT DIVISION.                                            00030000
+       INPUT-OUTPUT SECTION.                                            00040000
+       FILE-CONTROL.                                                    00050000
+             SELECT PROCSALE ASSIGN TO AS-DD3                           00060000
+             FILE STATUS IS FS1.                                        00070000
+             SELECT PTMASTER ASSIGN TO DD1                              00080000
+             ORGANIZATION IS INDEXED                                    00090000
+             ACCESS MODE IS  DYNAMIC                                    00091000
+             RECORD KEY IS PET-ID OF PTMASTER                           00092000
+            ALTERNATE RECORD KEY IS PET-TYPE OF PTMASTER WITH DUPLICATES00092100
+             FILE STATUS IS FS2.                                        00092200
+             SELECT PLREP ASSIGN TO DD7                                 00092300
+             FILE STATUS IS FS3.                                        00092400
+       DATA DIVISION.                                                   00092500
+       FILE SECTION.                                                    00092600
+       FD PROCSALE.                                                     00092700
+       COPY CP89752.                                                    00092800
+      *01 PROCESS.                                                      00092900
+      *   05 PET-ID           PIC 999.                                  00093000
+      *   05 DOO              PIC 999999.                               00094000
+      *   05 QUANT-BROU       PIC 99.                                   00095000
+      *   05 TOTAL-PRICE      PIC 99999V99.                             00096000
+      *   05 PROFIT-LOSS      PIC S9999V99.                             00097000
+      *   05                  PIC X(26).                                00098000
+       FD PTMASTER.                                                     00099000
+       COPY CPYIMKDR.                                                   00100000
+      *01 MASTER.                                                       00110000
+      *   05 PET-ID           PIC XXX.                                  00120000
+      *   05 PET-TYPE         PIC 9.                                    00130000
+      *      88 CAT  VALUE 1.                                           00140000
+      *      88 DOG  VALUE 2.                                           00150000
+      *      88 BIRD VALUE 3.                                           00160000
+      *      88 FISH VALUE 4.                                           00170000
+      *   05 BREED            PIC X(10).                                00180000
+      *   05 DOP              PIC 9(6).                                 00190000
+      *   05 CP               PIC 9999V99.                              00200000
+      *   05 QUANT-AVAL       PIC 99.                                   00210000
+      *   05                  PIC X(22).                                00220000
+       FD PLREP.                                                        00230000
+       01 OUTREC              PIC X(80).                                00240000
+       WORKING-STORAGE SECTION.                                         00250000
+      ***********PRINTS THE HEADER FOR EVERY PET-TYPE****************** 00251000
+       01 HEAD PIC X(80) VALUE '     PETID     BREED     DATEPUR     PRI00260000
+      -     'CE     QUANTITY     PROFIT/LOSS'.                          00270000
+      **********PRINTS A LINE FILLED WITH * FOR DEMARCATION************ 00271000
+       01 WS-LINE             PIC X(80) VALUE ALL '*'.                  00280000
+      **********PRINTS THE HEADING FOR THE REPORT********************** 00281000
+       01 BILL PIC X(80) VALUE '                      PROCESSED REPORT'.00290000
+      **********STORES DATE IN INDIAN FORMAT*************************** 00291000
+       01 WS-DATE.                                                      00300000
+          05                  PIC X(40).                                00310000
+          05 DT               PIC X(14) VALUE '         DATE:'.         00320000
+          05 DD               PIC XX.                                   00330000
+          05 S1               PIC X VALUE '/'.                          00340000
+          05 MM               PIC XX.                                   00350000
+          05 S2               PIC X VALUE '/'.                          00360000
+          05 YY               PIC XX.                                   00370000
+      **********STORES THE ACTUAL REPORT******************************* 00371000
+       01 WS-DET.                                                       00380000
+          05                  PIC X(5).                                 00390000
+          05 PET-ID           PIC X(3).                                 00400000
+          05                  PIC XX    VALUE SPACES.                   00410000
+          05 BREED            PIC X(10).                                00420000
+          05                  PIC XXXX VALUE SPACES.                    00430000
+          05 DOP  PIC 99/99/99.                                         00431000
+          05                  PIC XXXX VALUE SPACES.                    00432000
+          05 TOTAL-PRICE      PIC 99999.99.                             00433000
+          05                  PIC XXXXXX VALUE SPACES.                  00434000
+          05 QUANT-BROU       PIC 99.                                   00435000
+          05                  PIC XXXXXXXX VALUE SPACES.                00436000
+          05 PROFIT-LOSS      PIC -9999.99.                             00437000
+          05                  PIC XXXX VALUE SPACES.                    00438000
+       77 FS1                 PIC 99.                                   00439000
+       77 FS2                 PIC 99.                                   00440000
+       77 FS3                 PIC 99.                                   00450000
+       77 WS-FTR              PIC 99   VALUE 0.                         00460000
+      **********PRINTS PET-TYPE AND DATE******************************* 00461000
+       01 PET-T.                                                        00470000
+          05                  PIC X(5).                                 00480000
+          05 TYP              PIC X(10) VALUE 'PET-TYPE:'.              00490000
+          05 PT               PIC X(4).                                 00500000
+          05                  PIC X(5).                                 00510000
+          05 PG               PIC X(30) VALUE '                     PAGE00520000
+      -     '-NO.:'.                                                    00530000
+          05 WS-PG            PIC 99    VALUE 1.                        00540000
+      **********PRINTS TOTAL NO. OF PETS SOLD FOR EACH TYPE*************00540100
+       01 TOT.                                                          00540200
+          05                     PIC X(5).                              00540300
+          05 TOT-DISP            PIC X(13) VALUE 'TOTAL NO. OF'.        00540400
+          05 P-T                 PIC X(4).                              00540500
+          05 T2-DISP             PIC X(2)  VALUE 'S:'.                  00540600
+          05 TOT-TYPE            PIC 999   VALUE 0.                     00540700
+      **********PRINTS TOTAL PROFIT/LOSS FOR EACH TYPE***************** 00540800
+       01 PLTOT.                                                        00540900
+          05                     PIC X(5).                              00541000
+          05 TOT-DISP            PIC X(18) VALUE 'TOTAL PROFIT/LOSS:'.  00541100
+          05 PLT                 PIC -99999.99.                         00541200
+       01 TPL                    PIC S99999V99.                         00542000
+       01 P-TYP                  PIC 9.                                 00543000
+       PROCEDURE DIVISION.                                              00544000
+       MAIN-PARA.                                                       00545000
+             PERFORM OPEN-PARA                                          00546000
+             WRITE OUTREC FROM WS-LINE                                  00547000
+             MOVE SPACES TO OUTREC                                      00548000
+             WRITE OUTREC                                               00549000
+             WRITE OUTREC FROM BILL                                     00550000
+             MOVE SPACES TO OUTREC                                      00560000
+             WRITE OUTREC                                               00570000
+             MOVE FUNCTION CURRENT-DATE(7:2) TO DD                      00580000
+             MOVE FUNCTION CURRENT-DATE(5:2) TO MM                      00580100
+             MOVE FUNCTION CURRENT-DATE(3:2) TO YY                      00580200
+             PERFORM READ-INPUT UNTIL FS1 NOT = 0                       00580300
+             WRITE OUTREC FROM WS-LINE                                  00580400
+             CLOSE PROCSALE , PTMASTER                                  00580500
+             GOBACK.                                                    00580600
+       OPEN-PARA.                                                       00580700
+             OPEN INPUT  PROCSALE                                       00580800
+             OPEN INPUT  PTMASTER                                       00580900
+             OPEN OUTPUT PLREP                                          00581000
+             DISPLAY 'OPEN STATUS' FS1 ' ' FS2 ' ' FS3.                 00582000
+       READ-INPUT.                                                      00583000
+             READ PROCSALE                                              00584000
+                AT END PERFORM SUMMARY-PARA                             00585000
+                NOT AT END                                              00586000
+                MOVE PET-ID OF PROCESS TO PET-ID OF PTMASTER            00587000
+                READ PTMASTER                                           00588000
+                KEY IS PET-ID OF PTMASTER                               00589000
+                NOT INVALID KEY                                         00590000
+                 IF PET-TYPE OF MASTER NOT = P-TYP                      00600000
+                   MOVE PET-TYPE    OF MASTER  TO P-TYP                 00610000
+                   PERFORM CNTRL-BREAK                                  00620000
+                 END-IF                                                 00630000
+                 MOVE BREED       OF MASTER  TO BREED       OF WS-DET   00640000
+                END-READ                                                00650000
+                 MOVE TOTAL-PRICE OF PROCESS TO TOTAL-PRICE OF WS-DET   00660000
+                 MOVE PET-ID      OF PROCESS TO PET-ID      OF WS-DET   00670000
+                 MOVE DOP         OF MASTER  TO DOP         OF WS-DET   00680000
+                 MOVE QUANT-BROU  OF PROCESS TO QUANT-BROU  OF WS-DET   00690000
+                 MOVE PROFIT-LOSS OF PROCESS TO PROFIT-LOSS OF WS-DET   00700000
+                 ADD  QUANT-BROU  OF PROCESS TO TOT-TYPE OF TOT         00710000
+                 COMPUTE TPL = TPL + PROFIT-LOSS OF PROCESS             00720000
+                 MOVE  TPL TO PLT OF PLTOT                              00721000
+                 WRITE OUTREC FROM WS-DET                               00722000
+                 DISPLAY FS3                                            00723000
+             END-READ                                                   00724000
+             MOVE PT          OF  PET-T  TO P-T   OF   TOT .            00725000
+       CNTRL-BREAK.                                                     00726000
+             IF WS-FTR = 1                                              00727000
+                PERFORM SUMMARY-PARA                                    00728000
+             END-IF                                                     00729000
+             EVALUATE TRUE                                              00730000
+                 WHEN P-TYP = '1'                                       00740000
+                      MOVE ' CAT' TO PT OF PET-T                        00750000
+                 WHEN P-TYP = '2'                                       00751000
+                      MOVE ' DOG' TO PT OF PET-T                        00752000
+                 WHEN P-TYP = '3'                                       00753000
+                      MOVE 'BIRD' TO PT OF PET-T                        00753100
+                 WHEN P-TYP = '4'                                       00753200
+                      MOVE 'FISH' TO PT OF PET-T                        00753300
+             END-EVALUATE                                               00753400
+             WRITE OUTREC FROM WS-LINE                                  00753500
+             MOVE 1 TO WS-FTR                                           00753600
+             WRITE OUTREC FROM WS-DATE                                  00753700
+             WRITE OUTREC FROM PET-T                                    00753800
+             WRITE OUTREC FROM HEAD                                     00753900
+             MOVE 0 TO TOT-TYPE OF TOT                                  00754000
+             MOVE 0 TO TPL                                              00754100
+             ADD 1 TO WS-PG                                             00754200
+             WRITE OUTREC FROM WS-LINE                                  00754300
+             MOVE SPACES TO OUTREC                                      00754400
+             WRITE OUTREC.                                              00754500
+       SUMMARY-PARA.                                                    00754600
+             WRITE OUTREC FROM TOT.                                     00754700
+             WRITE OUTREC FROM PLTOT                                    00754800
+             MOVE SPACES TO OUTREC                                      00754900
+             WRITE OUTREC.                                              00755000

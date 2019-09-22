@@ -1,0 +1,181 @@
+      ************************CASE STUDY******************************* 00010001
+       ID DIVISION.                                                     00020000
+       PROGRAM-ID. CCASE9.                                              00030004
+       ENVIRONMENT DIVISION.                                            00031000
+       INPUT-OUTPUT SECTION.                                            00032000
+       FILE-CONTROL.                                                    00033000
+      *****************PET MASTER ************************************  00033100
+            SELECT PTMASTER ASSIGN TO DD1                               00034000
+            ORGANIZATION IS INDEXED                                     00035000
+            ACCESS MODE IS DYNAMIC                                      00036000
+            RECORD KEY IS PET-ID OF MASTER                              00037000
+            ALTERNATE RECORD KEY IS PET-TYPE OF MASTER WITH DUPLICATES  00038000
+            FILE STATUS IS WS-FS1.                                      00039000
+      *********************SALE TRANSACTION FILE**********************  00039100
+            SELECT SALETRAN ASSIGN TO DD2                               00040000
+            ORGANIZATION IS SEQUENTIAL                                  00050000
+            ACCESS MODE IS SEQUENTIAL                                   00060000
+            FILE STATUS IS WS-FS2.                                      00070000
+      *********************PROCCESS FILE******************************  00071000
+            SELECT PROCSALE ASSIGN TO AS-DD3                            00080000
+            ORGANIZATION IS SEQUENTIAL                                  00081000
+            ACCESS MODE IS SEQUENTIAL                                   00082000
+            FILE STATUS IS WS-FS3.                                      00083000
+      *********************UNPROCESS FILE*****************************  00083100
+            SELECT PENDSALE ASSIGN TO DD4                               00084000
+            ORGANIZATION IS SEQUENTIAL                                  00085000
+            ACCESS MODE IS SEQUENTIAL                                   00086000
+            FILE STATUS IS WS-FS4.                                      00087000
+      *********************DATA-DIVISION******************************  00087100
+       DATA DIVISION.                                                   00087300
+       FILE SECTION.                                                    00087400
+      *********************MASTER-BUFFER******************************  00087500
+       FD PTMASTER.                                                     00087600
+       COPY CPYIMKDR.                                                   00087709
+      * 01 MASTER.                                                      00087809
+      *    05 PET-ID               PIC XXX.                             00087909
+      *    05 PET-TYPE             PIC 9.                               00088009
+      *       88 CAT    VALUE 1.                                        00088109
+      *       88 DOG    VALUE 2.                                        00088209
+      *       88 BIRD   VALUE 3.                                        00089009
+      *       88 FISH   VALUE 4.                                        00090009
+      *    05 BREED                PIC X(10).                           00100009
+      *    05 DOP                  PIC 9(6).                            00110009
+      *    05 CP        PIC 9999V99.                                    00120009
+      *    05 QUANT-AVAL           PIC 99.                              00130009
+      *    05                      PIC X(22).                           00131009
+      *********************TRANSAC-BUFFER*****************************  00131100
+       FD SALETRAN.                                                     00132000
+       COPY CP089075.                                                   00132112
+      *01 TRANSAC.                                                      00133012
+      *   05 PET-ID               PIC 999.                              00134012
+      *   05 MRP                  PIC 9999V99.                          00135012
+      *   05 QUANT-BROU           PIC 99.                               00136012
+      *   05                      PIC X(39).                            00137012
+      *********************PROCESS-BUFFER*****************************  00137100
+       FD PROCSALE.                                                     00138000
+       COPY CP89752.                                                    00138112
+      *01 PROCESS.                                                      00139012
+      *   05 PET-ID               PIC 999.                              00140012
+      *   05 DOO                  PIC 999999.                           00150012
+      *   05 QUANT-BROU           PIC 99.                               00160012
+      *   05 TOTAL-PRICE          PIC 99999V99.                         00161012
+      *   05 PROFIT-LOSS          PIC S9999V99.                         00162012
+      *   05                      PIC X(26).                            00163013
+      *********************PEND-BUFFER********************************  00163100
+       FD PENDSALE.                                                     00164000
+       COPY CP89753.                                                    00164116
+      *01 UNPROCESS.                                                    00165015
+      *   05 PET-ID               PIC 999.                              00166015
+      *   05 MRP                  PIC 9999V99.                          00167015
+      *   05 QUANT-BROU           PIC 99.                               00168015
+      *   05 REMARK               PIC X(10).                            00169015
+      *   05                      PIC X(29).                            00169115
+      *********************WORKING-STORAGE****************************  00169200
+       WORKING-STORAGE SECTION.                                         00169300
+       77 WS-FS1                  PIC 99.                               00169400
+       77 WS-FS2                  PIC 99.                               00169500
+       77 WS-FS3                  PIC 99.                               00169600
+       77 WS-FS4                  PIC 99.                               00169700
+       77 TEMP1                   PIC 99.                               00169800
+       77 TEMP2                   PIC 99.                               00169900
+       77 CAL1                    PIC 99.                               00170000
+       77 CAL2                    PIC 99999V99.                         00171006
+       77 CAL3                    PIC S9999V99.                         00180005
+       77 WS-DATE                 PIC 9(6).                             00190000
+      *********************PROCEDURE-DIVISION*************************  00190100
+       PROCEDURE DIVISION.                                              00190200
+       A100-MAIN.                                                       00190300
+      *********************CALLING OF SORT PGM************************  00190400
+            CALL 'SORTPGM'                                              00190500
+      ******************OPENING OF FILES******************************  00190600
+            OPEN      I-O              PTMASTER                         00190700
+            OPEN      INPUT            SALETRAN                         00191100
+            OPEN      OUTPUT           PROCSALE                         00193000
+            OPEN      OUTPUT           PENDSALE                         00197000
+      *************CHECKING FILE STATUS OF OPENED FILES***************  00198000
+            DISPLAY "OPEN STATUS" WS-FS1                                00199000
+            DISPLAY "OPEN STATUS" WS-FS2                                00200000
+            DISPLAY "OPEN STATUS" WS-FS3                                00210000
+            DISPLAY "OPEN STATUS" WS-FS4                                00211000
+      **************PERFORM TRANSACTION PARA**************************  00211100
+            PERFORM TRANSACTION-PARA UNTIL WS-FS2 NOT = 0               00212000
+      ******************CLOSE ALL FILES*******************************  00212100
+            CLOSE SALETRAN                                              00213000
+            CLOSE PTMASTER                                              00214000
+            CLOSE PROCSALE                                              00215000
+            CLOSE PENDSALE                                              00215111
+            CALL 'REPRT3'                                               00215217
+            CALL 'PENDRPT'                                              00215303
+      *     CLOSE PENDSALE                                              00216011
+            STOP RUN.                                                   00217000
+      *******************READ TRANSACTION FILE************************  00217100
+       TRANSACTION-PARA.                                                00217200
+            READ SALETRAN                                               00217300
+            AT END DISPLAY "ALL RECORDS PROCCESED"                      00217400
+            NOT AT END                                                  00217500
+      *CHECKING RECORD OF TRANSAC IS NUMERIC AND ACCORDINGLY PROCESS**  00217600
+              IF ( QUANT-BROU OF TRANSAC IS NUMERIC ) AND ( MRP OF      00217700
+                         TRANSAC IS NUMERIC )                           00217800
+                 PERFORM UPD-MASTER-PARA                                00217900
+              ELSE                                                      00218000
+                 PERFORM UNPROCESS-PARA3                                00218100
+              END-IF                                                    00218200
+            END-READ.                                                   00219000
+      *CHECKING OF KEYS AND QUANTITY AND ACCORDINGLY PERFORM PROCESS**  00219100
+       UPD-MASTER-PARA.                                                 00220000
+            MOVE PET-ID OF TRANSAC TO PET-ID OF MASTER                  00230000
+            READ PTMASTER                                               00240000
+            KEY IS PET-ID OF MASTER                                     00250000
+      ************************VALIDATING KEYS*************************  00250100
+            INVALID KEY                                                 00251000
+                  PERFORM UNPROCESS-PARA1                               00251100
+            NOT INVALID KEY                                             00251200
+      ***********CHECKING IF ORDERED QUANTITY IS AVAILABLE************  00251300
+            IF ( QUANT-AVAL ) >= ( QUANT-BROU OF TRANSAC )              00251400
+               COMPUTE CAL1 = ( QUANT-AVAL ) - ( QUANT-BROU OF TRANSAC )00251500
+      ************UPDATING MASTER DATA********************************  00251600
+               MOVE CAL1 TO QUANT-AVAL                                  00251700
+               REWRITE MASTER                                           00251800
+               PERFORM PROCESS-PARA                                     00251900
+            ELSE                                                        00252000
+               PERFORM UNPROCESS-PARA2                                  00252100
+            END-IF                                                      00252200
+            END-READ.                                                   00252300
+      ****************WRITING INTO PROCESS FILE***********************  00252400
+       PROCESS-PARA.                                                    00252500
+            MOVE PET-ID OF MASTER TO PET-ID OF PROCESS                  00252600
+      ***********CALLING DATE PARA TO FORMAT THE DATE*****************  00252700
+            ACCEPT WS-DATE FROM DATE                                    00252800
+            PERFORM DATE-PARA                                           00252900
+      ****************************************************************  00253000
+            MOVE QUANT-BROU OF  TRANSAC TO QUANT-BROU OF PROCESS        00253100
+            COMPUTE CAL2 = ( MRP OF TRANSAC * QUANT-BROU OF TRANSAC )   00253200
+            MOVE CAL2 TO TOTAL-PRICE                                    00253300
+            COMPUTE CAL3 = ( CAL2 - ( ( QUANT-BROU OF TRANSAC ) * CP ) )00253400
+            MOVE CAL3 TO PROFIT-LOSS                                    00254000
+            WRITE PROCESS.                                              00255000
+      *******WRITE INTO PEND FILE IF KEY IS INVALID*******************  00255100
+       UNPROCESS-PARA1.                                                 00256000
+            MOVE CORR TRANSAC TO UNPROCESS                              00257000
+            MOVE 'INVALIDKEY' TO REMARK                                 00258000
+            WRITE UNPROCESS.                                            00259000
+      **********WRITE INTO PEND FILE IF QUANTITY IS OUT OF STOCK******  00259100
+       UNPROCESS-PARA2.                                                 00260000
+            MOVE CORR TRANSAC TO UNPROCESS                              00270000
+            MOVE 'QUANT-LESS' TO REMARK                                 00280000
+            WRITE UNPROCESS.                                            00290000
+      **WRITE INTO PEND FILE IF RECORD OF TRANSAC IS NOT NUMERIC******  00291000
+       UNPROCESS-PARA3.                                                 00300000
+            MOVE CORR TRANSAC TO UNPROCESS                              00310000
+            MOVE 'NOT-NUMBER' TO REMARK                                 00320000
+            WRITE UNPROCESS.                                            00330000
+      *******************FORMATTING OF DATE***************************  00331000
+       DATE-PARA.                                                       00340000
+            MOVE WS-DATE(1:1) TO DOO(5:1)                               00350000
+            MOVE WS-DATE(2:1) TO DOO(6:1)                               00360000
+            MOVE WS-DATE(3:1) TO DOO(3:1)                               00370000
+            MOVE WS-DATE(4:1) TO DOO(4:1)                               00371000
+            MOVE WS-DATE(5:1) TO DOO(1:1)                               00372000
+            MOVE WS-DATE(6:1) TO DOO(2:1).                              00373000
+      *******************END OF FILE**********************************  00374000

@@ -1,0 +1,81 @@
+       ID DIVISION.                                                     00010002
+       PROGRAM-ID. PENDRPT.                                             00020002
+       ENVIRONMENT DIVISION.                                            00030000
+       INPUT-OUTPUT SECTION.                                            00040000
+       FILE-CONTROL.                                                    00050000
+            SELECT INFILE ASSIGN TO DD4                                 00060003
+            FILE STATUS IS WS-FS1.                                      00070004
+            SELECT OUTFILE ASSIGN TO DD6                                00080003
+            FILE STATUS IS WS-FS2.                                      00090004
+       DATA DIVISION.                                                   00100000
+       FILE SECTION.                                                    00110000
+       FD INFILE.                                                       00120000
+       01 INREC.                                                        00130004
+          05 PET-ID  PIC X(3).                                          00131004
+          05 MRP     PIC X(6).                                          00132004
+          05 QUANT-BROU PIC X(2).                                       00133004
+          05 REMARK     PIC X(10).                                      00134005
+          05            PIC X(29).                                      00135005
+       FD OUTFILE.                                                      00140001
+       01 OUTREC PIC X(50).                                             00150001
+       WORKING-STORAGE SECTION.                                         00160001
+       01 HEAD PIC X(50) VALUE '   PET-ID   MRP      QUANTITY   REMAR'. 00170001
+       01 WS-LINE PIC X(50) VALUE ALL '-'.                              00180004
+       01 WS-PAGE.                                                      00190004
+          05        PIC X(38).                                          00200001
+          05 PG     PIC X(10) VALUE 'PAGE-NO:'.                         00210008
+          05 WS-PG  PIC 99 VALUE 01.                                    00220008
+       01 WS-DATE1.                                                     00221008
+          05        PIC X(39).                                          00222011
+          05   PIC X(05) VALUE 'DATE:'.                                 00223011
+          05 DATE2  PIC X(06).                                          00224010
+       01 WS-DET.                                                       00230001
+          05        PIC X(3) VALUE SPACES.                              00240001
+          05 WS-PET-ID PIC X(3).                                        00250001
+          05        PIC X(6) VALUE SPACES.                              00260001
+          05 WS-MRP    PIC X(6).                                        00270001
+          05        PIC X(3) VALUE SPACES.                              00280001
+          05 WS-QUANT-BROU PIC X(2).                                    00290001
+          05        PIC X(9) VALUE SPACES.                              00300001
+          05 WS-REMARK     PIC X(10).                                   00310001
+       77 WS-LCTR   PIC 99 VALUE 1.                                     00320001
+       77 WS-FS1    PIC 99.                                             00321006
+       77 WS-FS2    PIC 99.                                             00322006
+       77 TEMP      PIC X(6).                                           00323008
+       PROCEDURE DIVISION.                                              00330001
+       MAIN-PARA.                                                       00340001
+              PERFORM OPEN-PARA                                         00350001
+              PERFORM CNTRL-BREAK                                       00360001
+              PERFORM READ-INPUT UNTIL WS-FS1 NOT = 0                   00370001
+              CLOSE INFILE OUTFILE                                      00380001
+              EXIT PROGRAM.                                             00390007
+       CNTRL-BREAK.                                                     00400001
+              WRITE OUTREC FROM WS-PAGE                                 00410004
+              ACCEPT TEMP FROM DATE                                     00410108
+              PERFORM FORMAT-PARA                                       00410208
+              WRITE OUTREC FROM WS-DATE1                                00411008
+              WRITE OUTREC FROM HEAD                                    00420001
+              WRITE OUTREC FROM WS-LINE                                 00430004
+              ADD 1 TO WS-PG                                            00440001
+              MOVE 0 TO WS-LCTR.                                        00450001
+       READ-INPUT.                                                      00460001
+              READ INFILE                                               00470001
+                 NOT AT END                                             00480001
+                     MOVE PET-ID TO WS-PET-ID                           00490001
+                     MOVE MRP    TO WS-MRP                              00500001
+                     MOVE QUANT-BROU TO WS-QUANT-BROU                   00510001
+                     MOVE REMARK TO WS-REMARK                           00520001
+                     WRITE OUTREC FROM WS-DET                           00530001
+                     ADD 1     TO WS-LCTR                               00540001
+              END-READ.                                                 00550001
+       OPEN-PARA.                                                       00560001
+              OPEN INPUT INFILE                                         00570001
+              OPEN OUTPUT OUTFILE                                       00580001
+              DISPLAY 'OPEN STATUS' WS-FS1 ' ' WS-FS2.                  00590001
+       FORMAT-PARA.                                                     00600008
+              MOVE TEMP(1:1) TO DATE2(5:1)                              00610010
+              MOVE TEMP(2:1) TO DATE2(6:1)                              00620010
+              MOVE TEMP(3:1) TO DATE2(3:1)                              00630010
+              MOVE TEMP(4:1) TO DATE2(4:1)                              00640010
+              MOVE TEMP(5:1) TO DATE2(1:1)                              00650010
+              MOVE TEMP(6:1) TO DATE2(2:1).                             00660010

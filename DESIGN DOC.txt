@@ -1,0 +1,92 @@
+ ANIMAL LOVER'S PARADISE.
+
+ INPUT FILES: 1. PET'S MASTER (KSDS WITH PRIMARY AND ALTERNATE KEY[ONLY DEFINITION])(PTMASTER)
+
+                 -CONTAINS PET-ID (DETERMINED BY TYPE AND BREED) (PRIMARY KEY)(3-DIGIT)(UNIQUE)(ALPHANUMERIC)
+                 -PET TYPE (ALTERNATE KEY) (88 FIELD DECLARATION)(1-DIGIT)(1-CAT,2-DOG,3-BIRD,4-FISH)(ALPHANUMERIC)
+                 -BREED(10-CHAR)(DETERMINES TYPE OF BREED)
+                 -DATE OF PURCHASE(ROUGHLY DETERMINES AGE. BASICALLY DATE BOUGHT BY OWNER OF SHOP)(6-DIGIT/DDMMYY)(NUMERIC)
+                 -COST PRICE(PRICE PAID BY OWNER)(6-DIGIT WITH V IN DECLARATION FOR DECIMAL)(NUMERIC)
+                 -QUANTITY AVAILABLE(NO OF PETS OF THAT TYPE AND BREED AVAILABLE ON CURRENT DATE)(2-DIGIT)(NUMERIC)
+
+              2. SALES TRANSACTION FILE(PS FILE)(SALETRAN)
+
+                 -PET-ID(SAME AS 1)
+                 -MRP(PRICE PAID BY CUSTOMER)(6-DIGIT WITH V FOR DECIMAL)(NUMERIC)
+                 -QUANTITY BOUGHT(NO OF PETS OF THAT TYPE AND BREED ORDERED BY CUSTOMER)(2-DIGIT)(NUMERIC)
+
+ OUTPUT FILES: 1. PROCESSED SALES(ESDS)(PROCSALE)
+ 
+                 -PET-ID (SAME AS BEFORE)
+                 -DATE OF PURCHASE(CURRENT DATE FROM SYSTEM)(6-DIGIT/DDMMYY)(NUMERIC)
+                 -QUANTITY BOUGHT(SAME AS BEFORE)
+                 -TOTAL PRICE(TOTAL PRICE FOR EACH TYPE AND BREED)(7-DIGIT WITH V FOR DECIMAL POINT)(NUMERIC)
+                 -LOSS/PROFIT(LOSS/PROFIT FOR OWNER ON THAT ORDER)(6-DIGIT WITH V FOR DECIMAL POINT)(NUMERIC)
+
+               2. PROFIT/LOSS REPORT  (PS)(PLREP)
+                 
+                 -FORMATTED OUTPUT FOR EACH TYPE AND BREED
+                 -TO COMPUTE TOTAL PROFIT/LOSS FOR EACH TYPE
+                 -TOTAL NO OF EACH TYPE SOLD
+                 -CAT,DOG,BIRD,FISH IN THIS ORDER
+                 -EACH TYPE IN A PAGE
+
+               3. PENDING SALES (PS) (PENDSALE)
+                 
+                 -PET-ID
+                 -MRP
+                 -QUANTITY BOUGHT(ORDERED)
+                 -DETAILS(ID INVALID, QUANTITY NOT PRESENT ETC.)
+
+LOGIC FLOW:    1. BUILD PET'S MASTER(PTMASTER) KSDS FILE OF RECORD LENGTH 80 AND PRIMARY KEY AS PET-ID (3,0) AND ALTERNATE KEY AS PET-TYPE (1,0)
+               2. POPULATE PTMASTER WITH REPRO 
+               3. BUILD SALETRAN PS FILE WITH LRECL=80
+               4. RECORD THE ORDERS IN ABOVE-MENTIONED FORMAT
+               5. BUILD PROCSALE ESDS FILE WITH RECORD LENGTH 25 
+               6. BUILD PENDSALE PS FILE WITH LRECL=80
+               7. BUILD PLREP PS FILE WITH LRECL=80
+               8. OPEN SALETRAN IN INPUT MODE
+               9. OPEN PTMASTER IN I-O MODE
+               10.OPEN PROCSALE IN OUTPUT/EXTEND MODE BASED ON CONDITION
+               11.OPEN UNPROCESSED AS ABOVE.
+               12.READ SALETRAN AND PTMASTER FOR PET-ID AND TYPE TO CHECK FOR QUANTITY.
+               13.NOW COMPARE QUANTITY BOUGHT(QB) WITH QUANTITY AVAILABLE(QA). IF QB <= QA THEN SEND TO PROCSALE AND REWRITE PTMASTER, ELSE PENDSALE
+               14.DO FOR EVERY ORDER ON SALETRAN
+               15.IN PROCSALES CALCULATE TOTAL PROFIT/LOSS FOR THAT ORDER
+               16.AFTER PROCESSING ALL RECORDS IN SALETRAN DISPLAY TOTAL PROFIT/LOSS FOR EACH TYPE IN PLREP
+               17.FOR EVERY TIME PROFIT OF THREE BREEDS IS DONE GO TO NEXT PAGE.IF ONE TYPE IS ABSENT SKIP.SORTED BREEDWISE.
+VARIABLES:
+              1. PTMASTER
+              -01 MASTER.
+                   05 PET-ID      PIC XXX.
+                   05 PET-TYPE    PIC X.
+                       88 CAT     VALUE 1.
+                       88 DOG     VALUE 2.
+                       88 BIRD    VALUE 3.
+                       88 FISH    VALUE 4.
+                   05 BREED       PIC X(10).
+                   05 DOP         PIC 9(6).
+                   05 CP          PIC 9999V99.
+                   05 QA          PIC 99.
+                   05             PIC X(22).
+              2. PROCSALE 
+              01 PROCESS.                                                      
+                 05 PET-ID               PIC 999.                              
+                 05 DOO                  PIC 999999.                           
+                 05 QUANT-BROU           PIC 99.                               
+                 05 TOTAL-PRICE          PIC 99999V99.                         
+                 05 PROFIT-LOSS          PIC S9999V99.                         
+                 05                      PIC X(26). 
+              3.  PENDSALE
+              01 UNPROCESS.                                                    
+                 05 PET-ID               PIC 999.                              
+                 05 MRP                  PIC 9999V99.                          
+                 05 QUANT-BROU           PIC 99.                               
+                 05 REMARK               PIC X(10).                            
+                 05                      PIC X(29).
+              4. SALETRAN
+              01 TRANSAC.                                                     
+                 05 PET-ID               PIC 999.                              
+                 05 MRP                  PIC 9999V99.                        
+                 05 QUANT-BROU           PIC 99.                               
+                 05                      PIC X(39).                        
