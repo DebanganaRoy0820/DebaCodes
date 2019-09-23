@@ -1,0 +1,37 @@
+ (CPYIMKDR)
+ 000100        01 MASTER.                     
+ 000200           05 PET-ID       PIC XXX.    
+ 000300           05 PET-TYPE     PIC 9.      
+ 000400              88  CAT      VALUE 1.    
+ 000500              88  DOG      VALUE 2.    
+ 000600              88  BIRD     VALUE 3.    
+ 000700              88  FISH     VALUE 4.    
+ 000800           05 BREED        PIC X(10).  
+ 000900           05 DOP          PIC 9(6).   
+ 000910           05 CP           PIC 9999V99.
+ 001000           05 QUANT-AVAL   PIC 99.     
+ 001100           05              PIC X(22). 
+
+(CP089075) 
+000100        01 TRANSAC.                       
+000200           05 PET-ID        PIC 999.      
+000300           05 MRP           PIC 9999V99.  
+000400           05 QUANT-BROU    PIC 99.       
+000500           05               PIC X(39).    
+
+(CP89752) 
+000100        01 PROCESS.                     
+000200           05 PET-ID       PIC 999.     
+000300           05 DOO          PIC 999999.  
+000400           05 QUANT-BROU   PIC 99.      
+000500           05 TOTAL-PRICE  PIC 99999V99.
+000600           05 PROFIT-LOSS  PIC S9999V99.
+000700           05              PIC X(26).
+
+(CP89753)
+ 000200        01 UNPROCESS.                  
+ 000300           05 PET-ID      PIC 999.     
+ 000400           05 MRP         PIC 9999V99. 
+ 000500           05 QUANT-BROU  PIC 99.      
+ 000600           05 REMARK      PIC X(10).   
+ 000700           05             PIC X(29).       
