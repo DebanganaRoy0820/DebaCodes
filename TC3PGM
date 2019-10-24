@@ -1,0 +1,106 @@
+       IDENTIFICATION DIVISION.                                         00010000
+       PROGRAM-ID.  TC3PGM1.                                            00020002
+       DATA DIVISION.                                                   00030000
+       WORKING-STORAGE SECTION.                                         00040000
+       COPY EM89MS.                                                     00050000
+       COPY DFHAID.                                                     00051004
+       COPY DFHBMSCA.                                                   00052004
+       01 WS-COMM.                                                      00060000
+          02 WS-COM      PIC XXX.                                       00070000
+          02 WS-COM-LEN  PIC S9(4) COMP.                                00080000
+       01 SND-TXT.                                                      00090000
+          02 SND-TEXT    PIC X(30).                                     00100001
+          02 SND-LEN     PIC S9(4) COMP.                                00110000
+       LINKAGE SECTION.                                                 00120000
+       01 DFHCOMMAREA    PIC XXX.                                       00130000
+       PROCEDURE DIVISION.                                              00140000
+           IF EIBCALEN = 0                                              00150000
+              MOVE LOW-VALUES TO EM89MO                                 00151001
+              PERFORM SEND-MAP                                          00160003
+              MOVE 'EMP' TO WS-COM                                      00170003
+              PERFORM COND-RETURN                                       00180003
+           ELSE                                                         00190003
+              PERFORM RECEIVE-MAP                                       00200003
+              EVALUATE EIBAID                                           00210003
+                 WHEN DFHPF1                                            00220003
+                    MOVE DFHBMPRO TO MSGA                               00230004
+                    PERFORM WRITE-PARA                                  00240003
+                    MOVE 'WRT' TO WS-COM                                00250003
+                    PERFORM COND-RETURN                                 00260003
+                 WHEN DFHPF2                                            00260108
+                    MOVE DFHBMPRO TO MSGA                               00260208
+                    PERFORM READ-PARA                                   00260308
+                    MOVE 'RD ' TO WS-COM                                00260408
+                    PERFORM COND-RETURN                                 00260508
+                 WHEN DFHPF3                                            00260608
+                   MOVE LOW-VALUES TO SND-TEXT                          00260708
+                   MOVE 'THANK YOU.VISIT APP AGAIN' TO SND-TEXT         00260808
+                   MOVE LENGTH OF SND-TEXT TO SND-LEN                   00260910
+                   EXEC CICS SEND TEXT                                  00261008
+                      FROM(SND-TEXT)                                    00261108
+                      LENGTH(SND-LEN)                                   00261208
+                      ERASE                                             00261308
+                      FREEKB                                            00261408
+                   END-EXEC                                             00261508
+                   EXEC CICS RETURN                                     00261608
+                   END-EXEC                                             00261708
+                 WHEN DFHPF4                                            00261808
+                    MOVE DFHBMPRO TO MSGA                               00261908
+                    PERFORM REWRITE-PARA                                00262008
+                    MOVE 'RWT' TO WS-COM                                00262108
+                    PERFORM COND-RETURN                                 00262208
+                 WHEN DFHPF5                                            00262308
+                    MOVE DFHBMPRO TO MSGA                               00262408
+                    PERFORM CLR-PARA                                    00262508
+                    MOVE 'CLR' TO WS-COM                                00262608
+                    PERFORM COND-RETURN                                 00262708
+                 WHEN DFHPF6                                            00262808
+                    MOVE DFHBMPRO TO MSGA                               00262908
+                    PERFORM DEL-PARA                                    00263008
+                    MOVE 'DEL' TO WS-COM                                00264008
+                 WHEN OTHER                                             00290004
+                   MOVE DFHBMUNP TO MSGA                                00300004
+                   PERFORM OTH-PARA                                     00310004
+                   MOVE 'OTH' TO WS-COM                                 00320004
+                   PERFORM COND-RETURN                                  00330004
+              END-EVALUATE                                              00330104
+           END-IF                                                       00330204
+              EXEC CICS RETURN                                          00330304
+              END-EXEC.                                                 00330404
+          WRITE-PARA.                                                   00330604
+              MOVE 'WRITE SUCCESS' TO MSGO                              00330704
+              PERFORM SEND-MAP.                                         00330804
+          DEL-PARA.                                                     00330909
+              MOVE 'DELETE SUCCESS' TO MSGO                             00331009
+              PERFORM SEND-MAP.                                         00331109
+          CLR-PARA.                                                     00331209
+              MOVE LOW-VALUES TO MSGO                                   00331311
+              PERFORM SEND-MAP.                                         00331409
+          READ-PARA.                                                    00331509
+              MOVE 'READ SUCCESS' TO MSGO                               00331609
+              PERFORM SEND-MAP.                                         00331709
+          REWRITE-PARA.                                                 00331809
+              MOVE 'REWRITE SUCCESS' TO MSGO                            00331909
+              PERFORM SEND-MAP.                                         00332009
+          OTH-PARA.                                                     00460004
+              MOVE 'WRONG AID KEY' TO MSGO                              00470003
+              PERFORM SEND-MAP.                                         00480003
+          COND-RETURN.                                                  00490004
+              MOVE LENGTH OF WS-COM TO WS-COM-LEN                       00500003
+              EXEC CICS RETURN                                          00510003
+                 TRANSID('T89A')                                        00520004
+                 COMMAREA(WS-COM)                                       00530003
+                 LENGTH(WS-COM-LEN)                                     00540003
+              END-EXEC.                                                 00550003
+          SEND-MAP.                                                     00560004
+              EXEC CICS SEND                                            00570003
+                 MAP('EM89M')                                           00580003
+                 MAPSET('EM89MS')                                       00590003
+                 ERASE                                                  00600003
+                 FREEKB                                                 00610003
+              END-EXEC.                                                 00620003
+          RECEIVE-MAP.                                                  00630004
+              EXEC CICS RECEIVE                                         00640003
+                 MAP('EM89M')                                           00650003
+                 MAPSET('EM89MS')                                       00660003
+              END-EXEC.                                                 00670003
