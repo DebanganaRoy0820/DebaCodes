@@ -1,0 +1,140 @@
+       ID DIVISION.                                                     00010000
+       PROGRAM-ID. OUTREPT.                                             00020000
+       ENVIRONMENT DIVISION.                                            00030000
+       INPUT-OUTPUT SECTION.                                            00031000
+       FILE-CONTROL.                                                    00040000
+           SELECT REPT ASSIGN TO DD2                                    00050000
+           FILE STATUS IS FS2.                                          00060000
+       DATA DIVISION.                                                   00070000
+       FILE SECTION.                                                    00080000
+       FD REPT.                                                         00090000
+       01 OUTREC       PIC X(80).                                       00100006
+       WORKING-STORAGE SECTION.                                         00160000
+           EXEC SQL                                                     00161006
+              INCLUDE LOANTRAN                                          00162006
+           END-EXEC.                                                    00163006
+           EXEC SQL                                                     00163122
+              INCLUDE SQLCA                                             00163222
+           END-EXEC.                                                    00163322
+           EXEC SQL                                                     00163721
+              DECLARE LTCUR CURSOR FOR                                  00163875
+              SELECT LNO, CID,STATUS, TYPE, ODATE, OUTAMT               00163998
+                FROM LOANTRAN                                           00164099
+                ORDER BY LNO,CID                                        00164199
+      *         WHERE STATUS =  O                                       00164399
+           END-EXEC.                                                    00165023
+       01 HEAD1.                                                        00170001
+          05 BNAME     PIC X(12) VALUE 'INDOBANK LTD' .                 00180001
+          05           PIC X(10).                                       00181001
+          05 DATE-DISP PIC X(25) VALUE '                  DATE:'.       00182011
+          05           PIC X(10).                                       00191001
+          05 DATE-VAL.                                                  00200001
+             07 DD     PIC XX.                                          00210001
+             07 S1     PIC X     VALUE '/'.                             00220001
+             07 MM     PIC XX.                                          00230001
+             07 S2     PIC X     VALUE '/'.                             00240001
+             07 YYYY   PIC XXXX.                                        00250015
+          05           PIC X(13).                                       00251010
+       01 PAGE-N.                                                       00252001
+          05 PAGE-DISP PIC X(25) VALUE '                    PAGE:'.     00253012
+          05 PAGE-VAL  PIC 99    VALUE 01.                              00254017
+          05           PIC X(53).                                       00255012
+       01 PRNT         PIC X(80) VALUE '                     OUTSTANDING00256001
+      -    ' LOAN REPORT'.                                              00257001
+       01 HEAD2        PIC X(80) VALUE 'LOAN CATEGORY    CUSTOMER NUMBER00258009
+      -    '    LOAN NUMBER      DATE OF OPENING      AMOUNT'.          00259009
+       01 FIELDS.                                                       00260001
+          05 TYP       PIC XX.                                          00270001
+          05           PIC X(17).                                       00271099
+          05 CID       PIC X(5).                                        00280001
+          05           PIC X(17).                                       00281099
+          05 LNO       PIC 9(5).                                        00290001
+          05 DOP.                                                       00300001
+             07 D      PIC 99.                                          00310001
+             07 SA     PIC X     VALUE '/'.                             00320001
+             07 M      PIC 99.                                          00330001
+             07 SB     PIC X     VALUE '/'.                             00340001
+             07 Y      PIC 9999.                                        00350001
+          05 AMT       PIC ZZZZZZ9.                                     00360001
+       01 OUT-AMT.                                                      00370001
+          05 OA-DISP   PIC X(31) VALUE 'OUTSTANDING AMOUNT GRANDTOTAL:'.00380013
+          05 OA-VAL    PIC ZZZZZZ9.                                     00390001
+       77 FS2          PIC 99.                                          00391014
+       77 CNT          PIC 99    VALUE 0.                               00392099
+       77 GT           PIC 9999999.                                     00393099
+       PROCEDURE DIVISION.                                              00400001
+       MAIN-PARA.                                                       00410001
+           PERFORM OPEN-PARA                                            00410194
+           PERFORM PAGE-PARA                                            00410299
+           IF SQLCODE = 100                                             00410399
+              PERFORM CLOSE-PARA                                        00410499
+           STOP RUN.                                                    00410599
+       PAGE-PARA.                                                       00410699
+           MOVE FUNCTION CURRENT-DATE(7:2) TO DD OF HEAD1               00410793
+           MOVE FUNCTION CURRENT-DATE(5:2) TO MM OF HEAD1               00410893
+           MOVE FUNCTION CURRENT-DATE(1:4) TO YYYY OF HEAD1             00410993
+           WRITE OUTREC FROM HEAD1                                      00411092
+           WRITE OUTREC FROM PAGE-N                                     00412092
+           WRITE OUTREC FROM PRNT                                       00413092
+           WRITE OUTREC FROM HEAD2                                      00414092
+           PERFORM FETCH-PARA UNTIL SQLCODE NOT = 0                     00415095
+              DISPLAY   SQLCODE.                                        00415199
+       OPEN-PARA.                                                       00440001
+           OPEN OUTPUT REPT                                             00450001
+           DISPLAY 'OPEN STATUS' FS2                                    00460025
+              DISPLAY   SQLCODE                                         00460199
+           EXEC SQL                                                     00461025
+                OPEN LTCUR                                              00462025
+           END-EXEC.                                                    00463025
+              DISPLAY   SQLCODE                                         00463199
+           IF SQLCODE = 0                                               00464026
+              DISPLAY 'CURSOR OPEN SUCCESS'                             00465026
+           ELSE                                                         00466026
+              DISPLAY 'CURSOR OPEN FAILED' SQLCODE                      00467029
+           END-IF.                                                      00468095
+       FETCH-PARA.                                                      00470026
+              DISPLAY   SQLCODE                                         00470199
+           INITIALIZE HV-LOANTRAN                                       00471099
+           EXEC SQL                                                     00480029
+              FETCH                                                     00490099
+                        FROM LTCUR                                      00490171
+                        INTO :HV-LNO, :HV-CID,:HV-STATUS, :HV-TYPE,     00491067
+                        :HV-ODATE,:HV-OUTAMT                            00500038
+           END-EXEC.                                                    00510029
+           IF SQLCODE = 0                                               00520099
+              DISPLAY 'FETCH SUCCESS'                                   00521029
+              DISPLAY HV-LNO ' ' LNO                                    00522079
+              MOVE HV-LNO TO LNO                                        00530029
+              MOVE HV-CID TO CID                                        00540029
+              MOVE HV-TYPE TO TYP                                       00550029
+              MOVE HV-ODATE TO DOP                                      00560029
+              MOVE HV-OUTAMT TO AMT                                     00570029
+              COMPUTE GT  = GT + HV-OUTAMT                              00571099
+              WRITE OUTREC FROM FIELDS                                  00580029
+              DISPLAY   SQLCODE                                         00581099
+              COMPUTE CNT = CNT + 1                                     00582099
+              DISPLAY CNT                                               00583099
+                IF CNT = 18                                             00583199
+                  IF SQLCODE = 100                                      00583299
+                    GO TO   CLOSE-PARA                                  00583399
+                    MOVE 0 TO CNT                                       00583499
+                  END-IF                                                00583599
+                  COMPUTE PAGE-VAL OF PAGE-N = PAGE-VAL + 1             00583699
+                  MOVE 0 TO CNT                                         00583799
+                  PERFORM PAGE-PARA                                     00583899
+           ELSE                                                         00590029
+              DISPLAY 'FETCH FAILED' SQLCODE                            00600029
+           END-IF .                                                     00610099
+       CLOSE-PARA.                                                      00620096
+           PERFORM FOOT-PARA                                            00621099
+           EXEC SQL                                                     00630096
+              CLOSE LTCUR                                               00640096
+           END-EXEC.                                                    00650096
+           IF SQLCODE = 0                                               00660097
+              DISPLAY 'CLOSE SUCCESS'                                   00670097
+           ELSE                                                         00680097
+              DISPLAY 'CLOSE FAILED'                                    00690099
+           END-IF.                                                      00700099
+       FOOT-PARA.                                                       00710099
+           MOVE GT TO OA-VAL                                            00720099
+           WRITE OUTREC FROM OUT-AMT.                                   00730099
